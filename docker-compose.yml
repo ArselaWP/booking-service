@@ -1,0 +1,48 @@
+services:
+  mysql-booking:
+    image: mysql:8.0
+    container_name: sports-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: booking_db
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - sports-network
+
+  booking-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sports-booking-service
+    ports:
+      - "8003:8000"
+    volumes:
+      - .:/var/www
+    depends_on:
+      - mysql-booking
+    environment:
+      - APP_KEY=base64:yZlC0gR/L8qYcwtGgI81K5xI7iK2fXGZ8vW5t4Qp1Y0=
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql-booking
+      - DB_PORT=3306
+      - DB_DATABASE=booking_db
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - QUEUE_CONNECTION=rabbitmq
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_QUEUE=booking_created
+    networks:
+      - sports-network
+
+volumes:
+  mysql_data:
+
+networks:
+  sports-network:
+    external: true
